@@ -29,6 +29,8 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+
+  CHECK((this->kstride_h_ == 1) && (this->kstride_w_ == 1)) << "Backward_gpu is not implemented for fully convolutin.";
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   for (int i = 0; i < top.size(); ++i) {
