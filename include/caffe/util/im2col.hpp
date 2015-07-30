@@ -27,6 +27,14 @@ void col2im_gpu(const Dtype* data_col, const int channels,
     const int pad_h, const int pad_w, const int stride_h,
     const int stride_w, Dtype* data_im);
 
+template <typename Dtype>
+void fcn_backward_col2im_gpu(const Dtype* data_col, const int channels,
+    const int height, const int width, const int patch_h, const int patch_w,
+    const int pad_h, const int pad_w, const int stride_h,
+    const int stride_w, const int kstride_h, const int kstride_w,
+    Dtype* data_im);
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_IM2COL_HPP_

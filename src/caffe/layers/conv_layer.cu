@@ -48,8 +48,13 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          this->weight_gpu_gemm(bottom_data + bottom[i]->offset(n),
+	  if (this->kstride_h_ == 1) {
+	    this->weight_gpu_gemm(bottom_data + bottom[i]->offset(n),
               top_diff + top[i]->offset(n), weight_diff);
+	  } else {
+	    this->fcn_weight_gpu_gemm(bottom_data + bottom[i]->offset(n),
+              top_diff + top[i]->offset(n), weight_diff);
+	  }
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
