@@ -274,6 +274,10 @@ class Layer {
     return (param_propagate_down_.size() > param_id) ?
         param_propagate_down_[param_id] : false;
   }
+
+  inline void set_phase(Phase phase) {
+    phase_ = phase;
+  }
   /**
    * @brief Sets whether the layer should compute gradients w.r.t. a
    *        parameter at a particular index given by param_id.

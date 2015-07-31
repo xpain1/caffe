@@ -129,5 +129,9 @@ classdef Net < handle
       CHECK(ischar(weights_file), 'weights_file must be a string');
       caffe_('net_save', self.hNet_self, weights_file);
     end
+    function set_net_phase(self, phase)
+        CHECK(ischar(phase), 'phase must be a string.');
+        caffe_('set_net_phase', self.hNet_self, phase);
+    end
   end
 end

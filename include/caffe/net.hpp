@@ -189,6 +189,9 @@ class Net {
   inline void set_input_dim(int id, int num, int ch, int h, int w) {
     net_input_blobs_[id]->Reshape(num, ch, h, w);
   }
+  
+  void set_net_phase(Phase phase);
+
 
 
  protected:

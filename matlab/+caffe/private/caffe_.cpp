@@ -478,6 +478,24 @@ static void read_mean(MEX_ARGS) {
   mxFree(mean_proto_file);
 }
 
+// Usage: caffe_('set_net_phase', hNet, phase_name)
+static void set_net_phase(MEX_ARGS) {
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsChar(prhs[1]),
+      "Usage: caffe_('set_net_phase', hNet, phase_name)");
+  char* phase_name = mxArrayToString(prhs[1]);
+  Phase phase;
+  if (strcmp(phase_name, "train") == 0) {
+      phase = TRAIN;
+  } else if (strcmp(phase_name, "test") == 0) {
+      phase = TEST;
+  } else {
+    mxERROR("Unknown phase");
+  }
+  Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+  net->set_net_phase(phase);
+  mxFree(phase_name);
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -515,6 +533,7 @@ static handler_registry handlers[] = {
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
   { "read_mean",          read_mean       },
+  { "set_net_phase",      set_net_phase   },    
   // The end.
   { "END",                NULL            },
 };
