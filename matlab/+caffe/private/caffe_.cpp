@@ -520,6 +520,14 @@ static void empty_net_param_diff(MEX_ARGS) {
   }
 }
 
+// Usage: caffe_('apply_update', hSolver)
+static void apply_update(MEX_ARGS) {
+  mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
+      "Usage: caffe_('apply_update', hSolver)");
+  Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
+  solver->MatCaffeApplyUpdate();
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -559,6 +567,7 @@ static handler_registry handlers[] = {
   { "read_mean",            read_mean            },
   { "set_net_phase",        set_net_phase        },    
   { "empty_net_param_diff", empty_net_param_diff },
+  { "apply_update",          apply_update        },
   // The end.
   { "END",                  NULL                 },
 };

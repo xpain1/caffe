@@ -37,6 +37,7 @@ class Solver {
     return test_nets_;
   }
   int iter() { return iter_; }
+  virtual void MatCaffeApplyUpdate() = 0;
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -76,6 +77,9 @@ class SGDSolver : public Solver<Dtype> {
       : Solver<Dtype>(param_file) { PreSolve(); }
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
+  virtual void MatCaffeApplyUpdate() {
+    ApplyUpdate();
+  }
 
  protected:
   void PreSolve();
