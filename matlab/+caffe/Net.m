@@ -133,5 +133,8 @@ classdef Net < handle
         CHECK(ischar(phase), 'phase must be a string.');
         caffe_('set_net_phase', self.hNet_self, phase);
     end
+    function empty_net_param_diff(self)
+        caffe_('empty_net_param_diff', self.hNet_self);
+    end
   end
 end

@@ -496,6 +496,30 @@ static void set_net_phase(MEX_ARGS) {
   mxFree(phase_name);
 }
 
+// Usage: caffe_('empty_net_param_diff', hNet)
+static void empty_net_param_diff(MEX_ARGS) {
+  mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
+      "Usage: caffe_('empty_net_param_diff', hNet)");
+  Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+  for (int i = 0; i < net->params().size(); ++i) {
+      shared_ptr<Blob<float> > blob = net->params()[i];
+      switch (Caffe::mode()) {
+      case Caffe::CPU:
+        caffe_set(blob->count(), static_cast<float>(0),
+            blob->mutable_cpu_diff());
+        break;
+      case Caffe::GPU:
+#ifndef CPU_ONLY
+        caffe_gpu_set(blob->count(), static_cast<float>(0),
+            blob->mutable_gpu_diff());
+#else
+        NO_GPU;
+#endif
+	break;
+      }
+  }
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -506,36 +530,37 @@ struct handler_registry {
 
 static handler_registry handlers[] = {
   // Public API functions
-  { "get_solver",         get_solver      },
-  { "solver_get_attr",    solver_get_attr },
-  { "solver_get_iter",    solver_get_iter },
-  { "solver_restore",     solver_restore  },
-  { "solver_solve",       solver_solve    },
-  { "solver_step",        solver_step     },
-  { "get_net",            get_net         },
-  { "net_get_attr",       net_get_attr    },
-  { "net_forward",        net_forward     },
-  { "net_backward",       net_backward    },
-  { "net_copy_from",      net_copy_from   },
-  { "net_reshape",        net_reshape     },
-  { "net_save",           net_save        },
-  { "layer_get_attr",     layer_get_attr  },
-  { "layer_get_type",     layer_get_type  },
-  { "blob_get_shape",     blob_get_shape  },
-  { "blob_reshape",       blob_reshape    },
-  { "blob_get_data",      blob_get_data   },
-  { "blob_set_data",      blob_set_data   },
-  { "blob_get_diff",      blob_get_diff   },
-  { "blob_set_diff",      blob_set_diff   },
-  { "set_mode_cpu",       set_mode_cpu    },
-  { "set_mode_gpu",       set_mode_gpu    },
-  { "set_device",         set_device      },
-  { "get_init_key",       get_init_key    },
-  { "reset",              reset           },
-  { "read_mean",          read_mean       },
-  { "set_net_phase",      set_net_phase   },    
+  { "get_solver",           get_solver           },
+  { "solver_get_attr",      solver_get_attr      },
+  { "solver_get_iter",      solver_get_iter      },
+  { "solver_restore",       solver_restore       },
+  { "solver_solve",         solver_solve         },
+  { "solver_step",          solver_step          },
+  { "get_net",              get_net              },
+  { "net_get_attr",         net_get_attr         },
+  { "net_forward",          net_forward          },
+  { "net_backward",         net_backward         },
+  { "net_copy_from",        net_copy_from        },
+  { "net_reshape",          net_reshape          },
+  { "net_save",             net_save             },
+  { "layer_get_attr",       layer_get_attr       },
+  { "layer_get_type",       layer_get_type       },
+  { "blob_get_shape",       blob_get_shape       },
+  { "blob_reshape",         blob_reshape         },
+  { "blob_get_data",        blob_get_data        },
+  { "blob_set_data",        blob_set_data        },
+  { "blob_get_diff",        blob_get_diff        },
+  { "blob_set_diff",        blob_set_diff        },
+  { "set_mode_cpu",         set_mode_cpu         },
+  { "set_mode_gpu",         set_mode_gpu         },
+  { "set_device",           set_device           },
+  { "get_init_key",         get_init_key         },
+  { "reset",                reset                },
+  { "read_mean",            read_mean            },
+  { "set_net_phase",        set_net_phase        },    
+  { "empty_net_param_diff", empty_net_param_diff },
   // The end.
-  { "END",                NULL            },
+  { "END",                  NULL                 },
 };
 
 /** -----------------------------------------------------------------
