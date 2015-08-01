@@ -528,6 +528,28 @@ static void apply_update(MEX_ARGS) {
   solver->MatCaffeApplyUpdate();
 }
 
+// Usage: caffe_('set_input_dim', hNet, dim)
+static void set_input_dim(MEX_ARGS) {
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxGetNumberOfElements(prhs[1]) == 5,
+      "Usage: caffe_('set_input_dim', hNet, dim)");
+  Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+  double* dim = mxGetPr(prhs[1]);
+  int id = static_cast<int>(dim[0]);
+  int n = static_cast<int>(dim[1]);
+  int c = static_cast<int>(dim[2]);
+  int h = static_cast<int>(dim[3]);
+  int w = static_cast<int>(dim[4]);
+  LOG(INFO) << "Reshape input blob.";
+  LOG(INFO) << "Input_id = " << id;
+  LOG(INFO) << "num = " << n;
+  LOG(INFO) << "channel = " << c;
+  LOG(INFO) << "height = " << h;
+  LOG(INFO) << "width = " << w;
+  net->input_blobs()[id]->Reshape(n, c, h, w);
+  // Reshape each layer of the network
+  net->Reshape();
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -567,7 +589,8 @@ static handler_registry handlers[] = {
   { "read_mean",            read_mean            },
   { "set_net_phase",        set_net_phase        },    
   { "empty_net_param_diff", empty_net_param_diff },
-  { "apply_update",          apply_update        },
+  { "apply_update",         apply_update         },
+  { "set_input_dim",        set_input_dim        },
   // The end.
   { "END",                  NULL                 },
 };

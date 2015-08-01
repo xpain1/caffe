@@ -136,5 +136,8 @@ classdef Net < handle
     function empty_net_param_diff(self)
         caffe_('empty_net_param_diff', self.hNet_self);
     end
+    function set_input_dim(self, dim)
+        caffe_('set_input_dim', self.hNet_self, dim);
+    end
   end
 end
