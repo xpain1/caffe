@@ -33,6 +33,42 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
+  
+  // Functions for FCN2CNN
+  virtual inline void set_kstride(int kstride) {
+    CHECK(kstride_h_ ==kstride_w_) << "kstride_h_ should be equal to kstride_w_";
+    kstride_w_ = kstride_h_ = kstride;
+  }
+
+  virtual inline void set_pad(int pad) {
+    CHECK(pad_h_ == pad_w_) << "pad_h_ should be equal to pad_w";
+    pad_h_ = pad_w_ = pad;
+  }
+
+  virtual inline int get_stride() {
+    CHECK(stride_h_ == stride_w_) << "stride_h_ should be equal to stride_w_";
+    return stride_h_;
+  }
+
+  virtual inline void set_stride(int stride) {
+    stride_h_ = stride_w_ = stride;
+  }
+  
+  virtual inline void update_is1x1() {
+    is_1x1_ = kernel_w_ == 1 && kernel_h_ == 1
+      && stride_h_ == 1 && stride_w_ == 1 && pad_h_ == 0 && pad_w_ == 0;
+  }
+  
+  virtual inline void update_ext_stride() {
+    ext_kernel_h_ = (kernel_h_ - 1) * kstride_h_ + 1;
+    ext_kernel_w_ = (kernel_w_ - 1) * kstride_w_ + 1;
+  }
+
+
+
+
+
+
 
  protected:
   // Helper functions that abstract away the column buffer and gemm arguments.
@@ -413,6 +449,36 @@ class PoolingLayer : public Layer<Dtype> {
     return (this->layer_param_.pooling_param().pool() ==
             PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
+
+// Functions for FCN2CNN
+  virtual inline void set_kstride(int kstride) {
+    CHECK(kstride_h_ ==kstride_w_) << "kstride_h_ should be equal to kstride_w_";
+    kstride_w_ = kstride_h_ = kstride;
+  }
+
+  virtual inline void set_pad(int pad) {
+    CHECK(pad_h_ == pad_w_) << "pad_h_ should be equal to pad_w";
+    pad_h_ = pad_w_ = pad;
+  }
+
+  virtual inline int get_stride() {
+    CHECK(stride_h_ == stride_w_) << "stride_h_ should be equal to stride_w_";
+    return stride_h_;
+  }
+
+  virtual inline void set_stride(int stride) {
+    stride_h_ = stride_w_ = stride;
+  }
+   
+  virtual inline void update_ext_stride() {
+    ext_kernel_h_ = (kernel_h_ - 1) * kstride_h_ + 1;
+    ext_kernel_w_ = (kernel_w_ - 1) * kstride_w_ + 1;
+  }
+  virtual inline void check_poolmethod(PoolingParameter_PoolMethod method) {
+    CHECK(this->layer_param_.pooling_param().pool() ==
+            PoolingParameter_PoolMethod_MAX) << "Checking pooling method fails";
+  }
+
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

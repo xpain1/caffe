@@ -289,6 +289,16 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
+  // Functions for FNC2CNN and CNN2FCN
+  virtual inline void set_kstride(int kstride) {};
+  virtual inline void set_pad(int pad) {};
+  virtual inline void set_stride(int stride) {};
+  virtual inline int get_stride() {return 0;};
+  virtual inline void update_is1x1() {};
+  virtual inline void update_ext_stride() {};
+  virtual inline void check_poolmethod(PoolingParameter_PoolMethod method) {};
+
+
 
  protected:
   /** The protobuf that stores the layer parameters */

@@ -550,6 +550,22 @@ static void set_input_dim(MEX_ARGS) {
   net->Reshape();
 }
 
+// Usage: caffe_('cnn2fcn', hNet)
+static void cnn2fcn(MEX_ARGS) {
+  mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
+      "Usage: caffe_('cnn2fcn', hNet)");
+  Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+  net->CNN2FCN(1, 1);
+}
+
+// Usage: caffe_('fcn2cnn', hNet)
+static void fcn2cnn(MEX_ARGS) {
+  mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
+      "Usage: caffe_('fcn2cnn', hNet)");
+  Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+  net->FCN2CNN();
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -591,6 +607,8 @@ static handler_registry handlers[] = {
   { "empty_net_param_diff", empty_net_param_diff },
   { "apply_update",         apply_update         },
   { "set_input_dim",        set_input_dim        },
+  { "cnn2fcn",              cnn2fcn              },
+  { "fcn2cnn",              fcn2cnn              },
   // The end.
   { "END",                  NULL                 },
 };
