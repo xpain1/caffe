@@ -139,11 +139,11 @@ classdef Net < handle
     function set_input_dim(self, dim)
         caffe_('set_input_dim', self.hNet_self, dim);
     end
-    function cnn2fcn(self)
-        caffe_('cnn2fcn', self.hNet_self);
+    function cnn2fcn(self, param)
+        caffe_('cnn2fcn', self.hNet_self, param);
     end
-    function fcn2cnn(self)
-        caffe_('fcn2cnn', self.hNet_self);
+    function fcn2cnn(self, pad)
+        caffe_('fcn2cnn', self.hNet_self, pad);
     end
   end
 end

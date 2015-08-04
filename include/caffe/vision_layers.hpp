@@ -63,6 +63,11 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     ext_kernel_h_ = (kernel_h_ - 1) * kstride_h_ + 1;
     ext_kernel_w_ = (kernel_w_ - 1) * kstride_w_ + 1;
   }
+  
+  virtual inline int get_kernel_size() {
+    CHECK(kernel_h_ == kernel_w_) << "FCN requires the width and height of a kernel be equal.";
+    return kernel_h_;
+  }
 
 
 
@@ -138,7 +143,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   }
   inline void fcn_im2col_gpu(const Dtype* data, Dtype* col_buff) {
     im2col_gpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
-      kstride_h_, kstride_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff, 1, 1);
+      height_out_, width_out_, pad_h_, pad_w_, kstride_h_, kstride_w_, col_buff, 1, 1);
   }
   inline void fcn_col2im_gpu(const Dtype* col_buff, Dtype* data) {
     fcn_backward_col2im_gpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
@@ -478,7 +483,11 @@ class PoolingLayer : public Layer<Dtype> {
     CHECK(this->layer_param_.pooling_param().pool() ==
             PoolingParameter_PoolMethod_MAX) << "Checking pooling method fails";
   }
-
+  
+  virtual inline int get_kernel_size() {
+    CHECK(kernel_h_ == kernel_w_) << "FCN requires the width and height of a kernel be equal.";
+    return kernel_h_;
+  }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

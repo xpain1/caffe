@@ -865,18 +865,24 @@ void Net<Dtype>::CNN2FCN(int kstride, int pad) {
     if (strcmp(layer->type(), "Convolution") == 0) {
       layer->set_kstride(kstride);
       //layer->set_pad(pad);
-      layer->set_pad(0);
-      kstride *= layer->get_stride();
       layer->set_stride(1);
-      layer->update_is1x1();
-      pad = kstride;
+      if (pad != 0) {
+	pad = kstride * (layer->get_kernel_size()/2);
+      }
+      layer->set_pad(pad);
+      kstride *= layer->get_stride();
       layer->update_ext_stride();
+      layer->update_is1x1();
     } else if (strcmp(layer->type(), "Pooling") == 0) {
       layer->check_poolmethod(PoolingParameter_PoolMethod_MAX);
       //CHECK(layer->pool_param.pool() == PoolingParameter_PoolMethod_MAX) << "Only max pooling is impelmented for FCN.";
       layer->set_kstride(kstride);
+      // Do not pad for pooling layer
+      //if (pad != 0) {
+      //  pad = kstride;
+      //}
+      //layer->set_pad(pad);
       kstride *= layer->get_stride();
-      pad = kstride;
       layer->set_stride(1);
       layer->update_ext_stride();
     }
@@ -885,12 +891,18 @@ void Net<Dtype>::CNN2FCN(int kstride, int pad) {
 }
 
 template <typename Dtype> 
-void Net<Dtype>::FCN2CNN() {
+void Net<Dtype>::FCN2CNN(int pad) {
   for (int layer_id = 0; layer_id < layers_.size(); layer_id++) {
     Layer<Dtype>* layer = layers_[layer_id].get();
     if (strcmp(layer->type(), "Convolution") == 0) {
       layer->set_kstride(1);
-      layer->set_pad(1);
+      //layer->set_pad(1);
+      if (pad == 0) {
+	layer->set_pad(0);
+      } else {
+	pad = layer->get_kernel_size()/2;
+	layer->set_pad(pad);
+      }
       layer->update_is1x1();
       layer->update_ext_stride();
     } else if (strcmp(layer->type(), "Pooling") == 0) {

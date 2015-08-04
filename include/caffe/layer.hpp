@@ -297,6 +297,7 @@ class Layer {
   virtual inline void update_is1x1() {};
   virtual inline void update_ext_stride() {};
   virtual inline void check_poolmethod(PoolingParameter_PoolMethod method) {};
+  virtual inline int get_kernel_size() {return 0;};
 
 
 

@@ -458,11 +458,13 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       mask = max_idx_.gpu_data();
     }
     // NOLINT_NEXT_LINE(whitespace/operators)
+   //LOG(INFO) << "start FCNMaxPoolBackward";
    FCNMaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
        count, top_diff, mask, top_mask, top[0]->num(), channels_,
        height_, width_, pooled_height_, pooled_width_,
        kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, 
        kstride_h_, kstride_w_, bottom_diff);
+   //LOG(INFO) << "end FCNMAxPoolingBackward";
    return;
   }
 

@@ -307,6 +307,7 @@ static void net_backward(MEX_ARGS) {
       "Usage: caffe_('net_backward', hNet)");
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
   net->Backward();
+  //LOG(INFO) << "end of matcaffe net_backward";
 }
 
 // Usage: caffe_('net_copy_from', hNet, weights_file)
@@ -552,18 +553,23 @@ static void set_input_dim(MEX_ARGS) {
 
 // Usage: caffe_('cnn2fcn', hNet)
 static void cnn2fcn(MEX_ARGS) {
-  mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
-      "Usage: caffe_('cnn2fcn', hNet)");
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxGetNumberOfElements(prhs[1]) == 2, "Usage: caffe_('cnn2fcn', hNet, [kstride, pad])");
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
-  net->CNN2FCN(1, 1);
+  double* param = mxGetPr(prhs[1]);
+  int kstride = static_cast<int>(param[0]);
+  int pad = static_cast<int>(param[1]);
+
+  net->CNN2FCN(kstride, pad);
 }
 
 // Usage: caffe_('fcn2cnn', hNet)
 static void fcn2cnn(MEX_ARGS) {
-  mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
-      "Usage: caffe_('fcn2cnn', hNet)");
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxGetNumberOfElements(prhs[1]) == 1,
+      "Usage: caffe_('fcn2cnn', hNet, pad)");
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
-  net->FCN2CNN();
+  double* pad_pr = mxGetPr(prhs[1]);
+  int pad = static_cast<int>(pad_pr[0]);
+  net->FCN2CNN(pad);
 }
 
 /** -----------------------------------------------------------------

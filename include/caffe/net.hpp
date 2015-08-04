@@ -192,7 +192,7 @@ class Net {
   
   void set_net_phase(Phase phase);
   void CNN2FCN(int kstride, int pad);
-  void FCN2CNN();
+  void FCN2CNN(int pad);
 
 
 
