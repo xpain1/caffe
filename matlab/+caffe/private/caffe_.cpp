@@ -531,22 +531,27 @@ static void apply_update(MEX_ARGS) {
 
 // Usage: caffe_('set_input_dim', hNet, dim)
 static void set_input_dim(MEX_ARGS) {
-  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxGetNumberOfElements(prhs[1]) == 5,
+  int blob_num = mxGetM(prhs[1]);
+  int dim_num = mxGetN(prhs[1]);
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && dim_num == 5,
       "Usage: caffe_('set_input_dim', hNet, dim)");
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
   double* dim = mxGetPr(prhs[1]);
-  int id = static_cast<int>(dim[0]);
-  int n = static_cast<int>(dim[1]);
-  int c = static_cast<int>(dim[2]);
-  int h = static_cast<int>(dim[3]);
-  int w = static_cast<int>(dim[4]);
-  LOG(INFO) << "Reshape input blob.";
-  LOG(INFO) << "Input_id = " << id;
-  LOG(INFO) << "num = " << n;
-  LOG(INFO) << "channel = " << c;
-  LOG(INFO) << "height = " << h;
-  LOG(INFO) << "width = " << w;
-  net->input_blobs()[id]->Reshape(n, c, h, w);
+  for (int blob_id = 0; blob_id < blob_num; blob_id++) {
+    int id = static_cast<int>(dim[0*blob_num]);
+    int n = static_cast<int>(dim[1*blob_num]);
+    int c = static_cast<int>(dim[2*blob_num]);
+    int h = static_cast<int>(dim[3*blob_num]);
+    int w = static_cast<int>(dim[4*blob_num]);
+    LOG(INFO) << "Reshape input blob.";
+    LOG(INFO) << "Input_id = " << id;
+    LOG(INFO) << "num = " << n;
+    LOG(INFO) << "channel = " << c;
+    LOG(INFO) << "height = " << h;
+    LOG(INFO) << "width = " << w;
+    net->input_blobs()[id]->Reshape(n, c, h, w);
+    dim += 1;
+  }
   // Reshape each layer of the network
   net->Reshape();
 }
