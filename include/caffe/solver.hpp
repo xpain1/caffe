@@ -133,6 +133,9 @@ class WorkerSolver : public Solver<Dtype> {
   explicit WorkerSolver(const SolverParameter& param,
       const Solver<Dtype>* root_solver = NULL)
       : Solver<Dtype>(param, root_solver) {}
+  virtual void MatCaffeApplyUpdate() {
+    ApplyUpdate();
+  }
 
  protected:
   void ApplyUpdate() {}
