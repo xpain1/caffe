@@ -464,6 +464,22 @@ static void reset(MEX_ARGS) {
   init_key = static_cast<double>(caffe_rng_rand());
 }
 
+// Usage: caffe_('reset_by_index', index); index must be an descending order
+static void delete_solver(MEX_ARGS) {
+  mxCHECK(nrhs == 1, "Usage: caffe_('delete_solver', index)");
+  int num_solver = mxGetNumberOfElements(prhs[0]);
+  double* index = mxGetPr(prhs[0]);
+  for (int i = 0; i < num_solver; i++) {
+    LOG(INFO) << "solver size: " << solvers_.size();
+    solvers_.erase(solvers_.begin() + static_cast<int>(index[i]) - 1);
+  }
+
+  // Clear solvers and stand-alone nets
+  mexPrintf("Cleared %d solvers\n", num_solver);
+  // Generate new init_key, so that handles created before becomes invalid
+  // init_key = static_cast<double>(caffe_rng_rand());
+}
+
 // Usage: caffe_('read_mean', mean_proto_file)
 static void read_mean(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsChar(prhs[0]),
@@ -486,9 +502,9 @@ static void set_net_phase(MEX_ARGS) {
   char* phase_name = mxArrayToString(prhs[1]);
   Phase phase;
   if (strcmp(phase_name, "train") == 0) {
-      phase = TRAIN;
+    phase = TRAIN;
   } else if (strcmp(phase_name, "test") == 0) {
-      phase = TEST;
+    phase = TEST;
   } else {
     mxERROR("Unknown phase");
   }
@@ -503,21 +519,21 @@ static void empty_net_param_diff(MEX_ARGS) {
       "Usage: caffe_('empty_net_param_diff', hNet)");
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
   for (int i = 0; i < net->params().size(); ++i) {
-      shared_ptr<Blob<float> > blob = net->params()[i];
-      switch (Caffe::mode()) {
+    shared_ptr<Blob<float> > blob = net->params()[i];
+    switch (Caffe::mode()) {
       case Caffe::CPU:
-        caffe_set(blob->count(), static_cast<float>(0),
-            blob->mutable_cpu_diff());
-        break;
+	caffe_set(blob->count(), static_cast<float>(0),
+	    blob->mutable_cpu_diff());
+	break;
       case Caffe::GPU:
 #ifndef CPU_ONLY
-        caffe_gpu_set(blob->count(), static_cast<float>(0),
-            blob->mutable_gpu_diff());
+	caffe_gpu_set(blob->count(), static_cast<float>(0),
+	    blob->mutable_gpu_diff());
 #else
-        NO_GPU;
+	NO_GPU;
 #endif
 	break;
-      }
+    }
   }
 }
 
@@ -613,6 +629,7 @@ static handler_registry handlers[] = {
   { "set_device",           set_device           },
   { "get_init_key",         get_init_key         },
   { "reset",                reset                },
+  { "delete_solver",        delete_solver        },
   { "read_mean",            read_mean            },
   { "set_net_phase",        set_net_phase        },    
   { "empty_net_param_diff", empty_net_param_diff },
