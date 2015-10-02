@@ -768,6 +768,45 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   int softmax_axis_, outer_num_, inner_num_;
 };
 
+/**
+ * @brief: Gaussian Mixture Model layer with Loss 
+ *
+ * TODO(dox): 
+ */
+template <typename Dtype>
+class GMMLossLayer : public LossLayer<Dtype> {
+ public:
+  explicit GMMLossLayer(const LayerParameter& param)
+      : LossLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "GMMLoss"; }
+  virtual inline int ExactNumBottomBlobs() const { return 5; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  unsigned int num_mixtures_;
+  Blob<Dtype> N_; // the probability of the label given by each mixture
+  Blob<Dtype> P_; // the overall probability of GMM, weighted combination of each mixture probability.
+  Blob<Dtype> sum_ones_; // used for summing all the log likelihood
+  unsigned int num_;
+  unsigned int time_step_;
+
+};
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_LOSS_LAYERS_HPP_

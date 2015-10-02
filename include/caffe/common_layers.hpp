@@ -726,6 +726,8 @@ class TileLayer : public Layer<Dtype> {
   unsigned int axis_, tiles_, outer_dim_, inner_dim_;
 };
 
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_LAYERS_HPP_

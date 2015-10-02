@@ -32,7 +32,7 @@
 # Editor temporaries
 *.swp
 *~
-
+*.swo
 # Sublime Text settings
 *.sublime-workspace
 *.sublime-project
