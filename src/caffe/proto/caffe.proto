@@ -1008,6 +1008,7 @@ message WindowDataParameter {
 
 message GMMLossParameter {
   optional uint32 num_mixtures = 1 [default = 1];
+  optional float base = 2 [default = 0];
 }
 
 message SPPParameter {

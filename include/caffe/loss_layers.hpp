@@ -803,6 +803,7 @@ class GMMLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> sum_ones_; // used for summing all the log likelihood
   unsigned int num_;
   unsigned int time_step_;
+  Dtype base_;
 
 };
 

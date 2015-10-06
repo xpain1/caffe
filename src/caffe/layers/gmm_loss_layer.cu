@@ -43,12 +43,12 @@ __global__ void ComputeN(const int nthreads, const Dtype* mean,
 
 template <typename Dtype>
 __global__ void ComputeP(const int nthreads, const Dtype* mixture_prob, 
-    const Dtype* alpha, const unsigned int num_mixtures, Dtype* prob) {
+    const Dtype* alpha, const unsigned int num_mixtures, const Dtype base, Dtype* prob) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const Dtype* mixture_prob_cur = mixture_prob + index * num_mixtures;
     const Dtype* alpha_cur = alpha + index * num_mixtures;
     Dtype* prob_cur = prob + index;
-    *prob_cur = Dtype(0);
+    *prob_cur = Dtype(base);
 
     for(int i = 0; i < num_mixtures; i++) {
       *prob_cur += alpha_cur[i] * mixture_prob_cur[i];
@@ -82,7 +82,7 @@ void GMMLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       count, mean, variance, correlation, label, num_mixtures_, mixture_prob);
   count /= num_mixtures_; 
   ComputeP<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, mixture_prob, alpha, num_mixtures_, prob);
+      count, mixture_prob, alpha, num_mixtures_, base_, prob);
   ComputeLogLike<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, prob, log_like);
   Dtype loss = Dtype(0);

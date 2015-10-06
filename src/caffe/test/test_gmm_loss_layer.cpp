@@ -153,4 +153,24 @@ TYPED_TEST(GMMLossLayerTest, TestGradientCorrelation) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 3);
 }
+
+TYPED_TEST(GMMLossLayerTest, TestGradientBase) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_gmm_param()->set_num_mixtures(10);
+  layer_param.mutable_gmm_param()->set_base(0.1);
+  const Dtype kLossWeight = 4;
+  layer_param.add_loss_weight(kLossWeight);
+  GMMLossLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 1);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 2);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 3);
+}
 }  // namespace caffe

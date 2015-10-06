@@ -14,6 +14,7 @@ void GMMLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   num_mixtures_ = this->layer_param_.gmm_param().num_mixtures();
+  base_ = static_cast<Dtype>(this->layer_param_.gmm_param().base());
 }
 
 
