@@ -593,6 +593,15 @@ static void fcn2cnn(MEX_ARGS) {
   net->FCN2CNN(pad);
 }
 
+// Usage: caffe_('snapshot', hSolver, model_name)
+static void snapshot(MEX_ARGS) {
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]),
+      "Usage: caffe_('snapshot', hSolver, model_name)");
+  Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
+  string model_name(mxArrayToString(prhs[1]));
+  solver->MatCaffeSnapshot(model_name);
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -637,6 +646,7 @@ static handler_registry handlers[] = {
   { "set_input_dim",        set_input_dim        },
   { "cnn2fcn",              cnn2fcn              },
   { "fcn2cnn",              fcn2cnn              },
+  { "snapshot",             snapshot             },
   // The end.
   { "END",                  NULL                 },
 };

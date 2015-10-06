@@ -55,5 +55,9 @@ classdef Solver < handle
     function apply_update(self)
       caffe_('apply_update', self.hSolver_self);
     end
+    function snapshot(self, model_name)
+      caffe_('snapshot', self.hSolver_self, model_name);
+    end
+
   end
 end

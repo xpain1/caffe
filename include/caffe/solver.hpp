@@ -83,6 +83,8 @@ class Solver {
     callbacks_.push_back(value);
   }
 
+  virtual void MatCaffeSnapshot(const string& model_filename) {}
+
  protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
@@ -166,6 +168,10 @@ class SGDSolver : public Solver<Dtype> {
   virtual void MatCaffeApplyUpdate() {
     ApplyUpdate();
   }
+  virtual void MatCaffeSnapshot(const string& model_name) {
+    SnapshotSolverState(model_name);
+  }
+
 
  protected:
   void PreSolve();
