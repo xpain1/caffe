@@ -386,6 +386,8 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient) {
       this->blob_top_vec_);
 }
 
+
+
 TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -695,5 +697,27 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
 }
 
 #endif
+
+TYPED_TEST(ConvolutionLayerTest, TestMaskGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  this->blob_bottom_vec_.clear();
+  this->blob_bottom_2_->Reshape(1, 3, 8, 8);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.clear();
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(1);
+  convolution_param->set_num_output(10);
+  convolution_param->set_mask(true);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
 
 }  // namespace caffe

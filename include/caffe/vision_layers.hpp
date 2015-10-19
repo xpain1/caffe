@@ -87,6 +87,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void weight_cpu_gemm(const Dtype* input, const Dtype* output, Dtype*
       weights);
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
+  void forward_cpu_mask(Dtype* output, const unsigned int* mask);
+  void backward_cpu_mask(Dtype* output, const unsigned int* mask);
 
 #ifndef CPU_ONLY
   void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
@@ -99,6 +101,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void backward_gpu_bias(Dtype* bias, const Dtype* input);
   void fcn_weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype*
       weights);
+  virtual void fill_mask_gpu();
+  void forward_gpu_mask(Dtype* output, const unsigned int* mask);
+  void backward_gpu_mask(Dtype* output, const unsigned int* mask);
 
 #endif
 
@@ -107,6 +112,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   virtual bool reverse_dimensions() = 0;
   // Compute height_out_ and width_out_ from other parameters.
   virtual void compute_output_shape() = 0;
+  virtual void fill_mask();
+  virtual void fill_mask_cpu();
 
   int kernel_h_, kernel_w_;
   int ext_kernel_h_, ext_kernel_w_;
@@ -121,6 +128,10 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int height_out_, width_out_;
   bool bias_term_;
   bool is_1x1_;
+  
+  bool has_mask_;
+  Blob<unsigned int> mask_;
+  Blob<unsigned int> mask_index_;
 
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists

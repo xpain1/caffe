@@ -8,6 +8,8 @@
 
 namespace caffe {
 
+
+
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::compute_output_shape() {
   this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->ext_kernel_h_)
@@ -26,6 +28,10 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + bottom[i]->offset(n), weight,
           top_data + top[i]->offset(n));
+      if (this->has_mask_ && this->phase_ == TRAIN) {
+	const unsigned int* mask = this->mask_.cpu_data();
+	this->forward_cpu_mask(top_data + top[i]->offset(n), mask);
+      }
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + top[i]->offset(n), bias);
@@ -42,6 +48,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
+    Dtype* top_diff_mutable = top[i]->mutable_cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
     // Bias gradient, if necessary.
@@ -51,6 +58,14 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         this->backward_cpu_bias(bias_diff, top_diff + top[i]->offset(n));
       }
     }
+    // mask
+    if (this->has_mask_ && this->phase_ == TRAIN) {
+      const unsigned int* mask = this->mask_.cpu_data();
+      for (int n = 0; n < this->num_; ++n) {
+	this->backward_cpu_mask(top_diff_mutable + top[i]->offset(n), mask);
+      }
+    }
+
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.

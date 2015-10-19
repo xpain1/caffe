@@ -5,8 +5,11 @@
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
-
+#include "iostream"
 namespace caffe {
+
+
+
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -115,6 +118,110 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+  // Initialize mask_ if necessary
+  has_mask_ = conv_param.mask();
+  if (has_mask_) {
+    height_ = bottom[0]->height();
+    width_ = bottom[0]->width();
+    compute_output_shape();
+    mask_.Reshape(1, conv_out_channels_, height_out_, width_out_);
+    mask_index_.Reshape(1, conv_out_channels_, 4, 1);
+    caffe_rng_bernoulli(mask_index_.count(), 0.5, mask_index_.mutable_cpu_data());
+    fill_mask();
+  }
+}
+
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::fill_mask_cpu() {
+  const unsigned int* mask_index = this->mask_index_.cpu_data();
+  unsigned int* mask = this->mask_.mutable_cpu_data();
+  const int channel = this->mask_.channels();
+  const int height = this->mask_.height();
+  const int half_height = height / 2;
+  const int width = this->mask_.width();
+  const int half_width = width / 2;
+  const int dim = height * width;
+  for (int c = 0; c < channel; c++) {
+    for (int h = 0; h < height; h++) {
+      for (int w = 0; w < width; w++) {
+	int h_ind = h / half_height;
+	int w_ind = w / half_width;
+	mask[c * dim + h * width + w] = mask_index[c * 4 + 2 * h_ind + w_ind];
+      }
+    }
+  }
+}
+  
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::fill_mask() {
+  // Fix mask_index of the first five channels
+  unsigned int* mask_index = this->mask_index_.mutable_cpu_data(); 
+  CHECK_GT(this->mask_index_.channels(), 4) << "Channel number of mask_ (top blob) should be >= 5";
+  CHECK_GE(this->mask_.width(), 2) << "width of mask_ (top blob) should be >= 2";
+  CHECK_GE(this->mask_.height(), 2) << "height of mask_ (top blob) should be >= 2";
+  for (int i = 0; i < 4; i++) {
+    mask_index[i] = 1;
+  }
+  mask_index[4] = 1;
+  mask_index[5] = 0;
+  mask_index[6] = 1;
+  mask_index[7] = 0;
+
+  mask_index[8] = 0;
+  mask_index[9] = 1;
+  mask_index[10] = 0;
+  mask_index[11] = 1;
+
+  mask_index[12] = 1;
+  mask_index[13] = 1;
+  mask_index[14] = 0;
+  mask_index[15] = 0;
+
+  mask_index[16] = 0;
+  mask_index[17] = 0;
+  mask_index[18] = 1;
+  mask_index[19] = 1;
+  //
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    fill_mask_cpu();
+    break;
+  case Caffe::GPU:
+    fill_mask_gpu();
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+  }
+}
+
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::forward_cpu_mask(Dtype* output, const unsigned int* mask) {
+  const int height = this->height_out_;
+  const int width = this->width_out_;
+  const int channel = this->conv_out_channels_;
+  const int dim = width * height;
+  for (int c = 0; c < channel; c++) {
+    for (int h = 0; h < height; h++) {
+      for (int w = 0; w < width; w++) {
+	output[c * dim + h * width + w] *= mask[c * dim + h*width + w];
+      }
+    }
+  }
+}
+
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::backward_cpu_mask(Dtype* output, const unsigned int* mask) {
+  const int height = this->height_out_;
+  const int width = this->width_out_;
+  const int channel = this->conv_out_channels_;
+  const int dim = width * height;
+  for (int c = 0; c < channel; c++) {
+    for (int h = 0; h < height; h++) {
+      for (int w = 0; w < width; w++) {
+	output[c * dim + h * width + w] *= mask[c * dim + h*width + w];
+      }
+    }
+  }
 }
 
 template <typename Dtype>
@@ -138,7 +245,14 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
         << "Inputs must have same width.";
   }
   // Shape the tops.
+  int height_tmp = height_out_;
+  int width_tmp = width_out_;
   compute_output_shape();
+  if (has_mask_) {
+    CHECK_EQ(height_tmp, height_out_) << "Top height and width are not allowed to change when using mask";
+    CHECK_EQ(width_tmp, width_out_) << "Top height and width are not allowed to change when using mask";
+  }
+
   for (int top_id = 0; top_id < top.size(); ++top_id) {
     top[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }

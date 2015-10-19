@@ -497,6 +497,7 @@ message ConvolutionParameter {
   optional uint32 kstride = 20 [default = 1]; // kstride for fully convolutional layers
   optional uint32 kstride_h = 21;
   optional uint32 kstride_w = 22;
+  optional bool mask = 23 [default = false];
 }
 
 message DataParameter {

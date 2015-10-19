@@ -8,6 +8,7 @@
 
 namespace caffe {
 
+
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -18,6 +19,10 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < this->num_; ++n) {
       this->forward_gpu_gemm(bottom_data + bottom[i]->offset(n), weight,
           top_data + top[i]->offset(n));
+      if (this->has_mask_ && this->phase_ == TRAIN) {
+	const unsigned int* mask = this->mask_.gpu_data();
+	this->forward_gpu_mask(top_data + top[i]->offset(n), mask);
+      }
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->gpu_data();
         this->forward_gpu_bias(top_data + top[i]->offset(n), bias);
@@ -35,6 +40,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
+    Dtype* top_diff_mutable = top[i]->mutable_gpu_diff();
     // Bias gradient, if necessary.
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
@@ -42,6 +48,14 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->backward_gpu_bias(bias_diff, top_diff + top[i]->offset(n));
       }
     }
+    // Mask
+    if (this->has_mask_ && this->phase_ == TRAIN) {
+      const unsigned int* mask = this->mask_.gpu_data();
+      for (int n = 0; n < this->num_; ++n) {
+	this->backward_gpu_mask(top_diff_mutable + top[i]->offset(n), mask);
+      }
+    }
+      
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       const Dtype* bottom_data = bottom[i]->gpu_data();
       Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
