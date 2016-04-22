@@ -2,6 +2,8 @@
 #define CAFFE_PYTHON_LAYER_HPP_
 
 #include <boost/python.hpp>
+
+#include <string>
 #include <vector>
 
 #include "caffe/layer.hpp"
@@ -9,6 +11,20 @@
 namespace bp = boost::python;
 
 namespace caffe {
+
+#define PYTHON_LAYER_ERROR() { \
+  PyObject *petype, *pevalue, *petrace; \
+  PyErr_Fetch(&petype, &pevalue, &petrace); \
+  bp::object etype(bp::handle<>(bp::borrowed(petype))); \
+  bp::object evalue(bp::handle<>(bp::borrowed(bp::allow_null(pevalue)))); \
+  bp::object etrace(bp::handle<>(bp::borrowed(bp::allow_null(petrace)))); \
+  bp::object sio(bp::import("StringIO").attr("StringIO")()); \
+  bp::import("traceback").attr("print_exception")( \
+    etype, evalue, etrace, bp::object(), sio); \
+  LOG(INFO) << bp::extract<string>(sio.attr("getvalue")())(); \
+  PyErr_Restore(petype, pevalue, petrace); \
+  throw; \
+}
 
 template <typename Dtype>
 class PythonLayer : public Layer<Dtype> {
